@@ -3,7 +3,7 @@
 
 using namespace std;
 
-Node::Node(const string &s) : song(s), next(nullptr), back(nullptr) {}
+Node::Node(const Song &s) : song(s), next(nullptr), back(nullptr) {}
 
 CircularList::CircularList() : ptrHead(nullptr) {}
 
@@ -20,7 +20,7 @@ CircularList::~CircularList() {
 
 bool CircularList::empty() { return ptrHead == nullptr; }
 
-void CircularList::insert_Last(const string &song) {
+void CircularList::insert_Last(const Song &song) {
     Node *new_node = new Node(song);
     if (ptrHead == nullptr) {
         new_node->next = new_node;
@@ -42,9 +42,10 @@ void CircularList::print() {
     }
 
     Node *temp = ptrHead;
-    cout << "\n🎵 Playlist cargada:\n";
+    cout << "Índice | Nombre - Artista - Duración\n";
     do {
-        cout << "→ " << temp->song << endl;
+        cout << temp->song.id << " | " << temp->song.name << " - "
+                    << temp->song.artist << " - " << temp->song.duration << "\n";
         temp = temp->next;
     } while (temp != ptrHead);
 }

@@ -1,15 +1,15 @@
 #pragma once
 #include <string>
-
+#include "../Models/song.hpp"
 using namespace std;
 
 class Node {
 public:
-    string song;
+    Song song;
     Node *next;
     Node *back;
 
-    Node(const string &s);
+    Node(const Song &s);
 };
 
 class CircularList {
@@ -20,7 +20,7 @@ public:
     CircularList();
     ~CircularList();
     bool empty();
-    void insert_Last(const string &song);
+    void insert_Last(const Song &song);
     void print();
     Node* nextSong(Node* current);
     Node* prevSong(Node* current);
