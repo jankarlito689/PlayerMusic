@@ -3,15 +3,28 @@
 
 using namespace std;
 
-bool Player::play(const string &songPath) {
-    if (!music.openFromFile(songPath)) {
-            cerr << "⚠️  No se pudo abrir: " << songPath << endl;
+bool Player::play(const Song &song) {
+    //Verificamos la ruta de la canción
+    if(song.path.empty()){
+        cerr << "⚠️  Ruta vacía para la canción: " << song.name << endl;
         return false;
     }
-
-    currentSong = songPath;
+    if (!music.openFromFile(song.path)) {
+            cerr << "⚠️  No se pudo abrir: " << song.path << endl;
+        return false;
+    }// Obtener duración de la canción
+    if (temp.openFromFile(song.path)) {
+            sf::Time t = temp.getDuration();
+            int s = (int)t.asSeconds();
+            int min = s / 60;
+            s %= 60;
+            const_cast<Song&>(song).duration = to_string(min) + ":" + (s < 10 ? "0" : "") + to_string(s);
+        } else {
+            const_cast<Song&>(song).duration = "00:00";
+        }
+    currentSong = song;
     music.play();
-    cout << "▶️  Reproduciendo: " << songPath << endl;
+    cout << "▶️  Reproduciendo: " << song.name << " - " << song.artist << " (" << song.duration << ")" << endl;
     return true;
 }
 
@@ -35,5 +48,5 @@ bool Player::isPlaying() {
 }
 
 string Player::getCurrentSong() const {
-    return currentSong;
+    return currentSong.name;
 }

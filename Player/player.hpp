@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include "../Models/song.hpp"
 #include <SFML/Audio.hpp>
 
 using namespace std;
@@ -7,10 +8,11 @@ using namespace std;
 class Player {
 private:
     sf::Music music;
-    string currentSong;
+    sf::Music temp;
+    Song currentSong;
 
 public:
-    bool play(const string &songPath);
+    bool play(const Song &song);
     void stop();
     void pause();
     void resume();
