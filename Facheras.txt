@@ -1,3 +1,2 @@
-songs/Diles.ogg
-songs/Can't Get You out of My Head.ogg
-songs/Surfistas-DeLa-Manera-_version-electroacustica_-Surfistas-del-Sistema.ogg
+Diles;Varios;Mix Latino;songs/Diles.ogg
+Can't Get You out of My Head;AnnenMayKantereit;Fever;songs/Can't Get You out of My Head.ogg
