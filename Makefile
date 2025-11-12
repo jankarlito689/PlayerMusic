@@ -14,7 +14,7 @@ SRC_DIR = .
 FILE_DIR = File
 LIST_DIR = List
 PLAYER = Player
-UI_DIR = Ui
+UI_DIR = UI
 UTILS_DIR = Utils
 
 # Archivos fuente
