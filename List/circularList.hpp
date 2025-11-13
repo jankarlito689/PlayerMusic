@@ -22,6 +22,7 @@ public:
     bool empty();
     void insert_Last(const Song &song);
     void print();
+    void clear();
     Node* nextSong(Node* current);
     Node* prevSong(Node* current);
     Node* getHead();

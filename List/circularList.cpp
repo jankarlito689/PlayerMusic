@@ -50,6 +50,17 @@ void CircularList::print() {
     } while (temp != ptrHead);
 }
 
+void CircularList::clear(){
+    if (!ptrHead) return;
+    Node* temp = ptrHead;
+    do {
+        Node* next = temp->next;
+        delete temp;
+        temp = next;
+    } while (temp != ptrHead);
+    ptrHead = nullptr;
+}
+
 Node* CircularList::getHead() { return ptrHead; }
 
 Node* CircularList::nextSong(Node* current) {
