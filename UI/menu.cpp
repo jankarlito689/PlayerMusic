@@ -28,6 +28,7 @@ void drawMenu() {
         << "║ " << YELLOW << "2) " << WHITE << "Reanudar canción                            ║\n"
         << "║ " << YELLOW << "3) " << WHITE << "Siguiente canción                           ║\n"
         << "║ " << YELLOW << "4) " << WHITE << "Canción anterior                            ║\n"
+        << "║ " << YELLOW << "5) " << WHITE << "Cambiar de playList                         ║\n"
         << "║ " << YELLOW << "0) " << WHITE << "Salir del reproductor                       ║\n";
     drawFooter();
 }
