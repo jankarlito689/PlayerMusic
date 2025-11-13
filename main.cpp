@@ -62,6 +62,34 @@ int main() {
                 current = playlist.prevSong(current);
                 player.play(current->song);
                 break;
+            case 5: {
+                player.stop();
+                playlist.clear(); // 🧹 Limpia la lista actual (asegúrate de tener este método)
+                limpiar();
+
+                cout << "Ingrese la nueva ruta del archivo de playlist (.txt): ";
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                getline(cin, path);
+
+                auto newSongs = file.readPlaylist(path);
+                if (newSongs.empty()) {
+                    cerr << "No se encontraron canciones en la nueva playlist.\n";
+                    pausar();
+                    break;
+                }
+
+                for (auto &song : newSongs)
+                    playlist.insert_Last(song);
+
+                current = playlist.getHead();
+                if (!current) {
+                    cerr << "Error: playlist vacía.\n";
+                    break;
+                }
+                player.play(current->song);
+                cout << "✅ Playlist cambiada correctamente.\n";
+                break;
+            }
             case 0:
                 player.stop();
                 cout << "👋  Gracias por usar el reproductor.\n";
