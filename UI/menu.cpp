@@ -12,7 +12,7 @@ namespace Ui {
 
 void drawHeader() {
     cout << CYAN << "╔════════════════════════════════════════════════════════════╗\n";
-    cout << "║" << WHITE << "                🎧  REPRODUCTOR MUSICAL C++                " << CYAN << "║\n";
+    cout << "║" << WHITE << "                🎧  REPRODUCTOR MUSICAL C+     " << CYAN << "║\n";
     cout << "╠════════════════════════════════════════════════════════════╣\n";
     cout << RESET;
 }
@@ -29,7 +29,22 @@ void drawMenu() {
         << "║ " << YELLOW << "3) " << WHITE << "Siguiente canción                           ║\n"
         << "║ " << YELLOW << "4) " << WHITE << "Canción anterior                            ║\n"
         << "║ " << YELLOW << "5) " << WHITE << "Cambiar de playList                         ║\n"
+        << "║ " << YELLOW << "6) " << WHITE << "Gestión de playList                         ║\n"
         << "║ " << YELLOW << "0) " << WHITE << "Salir del reproductor                       ║\n";
+    drawFooter();
+}
+
+void drawPlayListMenu() {
+    drawHeader();
+    cout << WHITE
+        << "║ " << YELLOW << "1) " << WHITE << "Registrar nueva canción                    ║\n"
+        << "║ " << YELLOW << "2) " << WHITE << "Buscar canción                              ║\n"
+        << "║ " << YELLOW << "3) " << WHITE << "Ordenar canciones                           ║\n"
+        << "║ " << YELLOW << "4) " << WHITE << "Invertir lista                              ║\n"
+        << "║ " << YELLOW << "5) " << WHITE << "Editar canción                              ║\n"
+        << "║ " << YELLOW << "6) " << WHITE << "Eliminar canción                            ║\n"
+        << "║ " << YELLOW << "7) " << WHITE << "Vaciar lista                                ║\n"
+        << "║ " << YELLOW << "0) " << WHITE << "Volver al menú principal                    ║\n";
     drawFooter();
 }
 
