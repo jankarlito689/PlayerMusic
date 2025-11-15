@@ -9,7 +9,6 @@ vector<Song> File::readPlaylist(const string &path){
     ifstream file(path);
     vector<Song> songs;
     string line;
-    int IdCounter = 1;
 
     if (!file.is_open()) {
         cerr << "⚠️  Error: no se pudo abrir el archivo " << path << endl;
@@ -29,7 +28,6 @@ vector<Song> File::readPlaylist(const string &path){
 
         // asigna campos (maneja si faltan)
         Song song;
-        song.id = IdCounter++;
         song.name     = name.size() > 0 ? name : "Desconocido";
         song.artist   = artist.size() > 0 ? artist : "Desconocido";
         song.album    = album.size() > 0 ? album : "N/A";
