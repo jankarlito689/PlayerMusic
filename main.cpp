@@ -1,11 +1,14 @@
 #include <iostream>
 #include <limits>
+#include <filesystem>
 #include "File/File.hpp"
 #include "List/circularList.hpp"
 #include "Player/player.hpp"
 #include "UI/menu.hpp"
 #include "Utils/utils.hpp"
+
 using namespace std;
+namespace fs = std::filesystem;
 
 int main() {
     File file;
@@ -14,8 +17,18 @@ int main() {
 
     limpiar();
     string path;
-    cout << "Ingrese la ruta del archivo de playlist (.txt): ";
-    getline(cin, path);
+    
+    while (true) {
+        cout << "Ingrese la ruta del archivo de playlist (.txt): ";
+        getline(cin, path);
+
+        if (fs::exists(path)) {
+            break;
+        } else {
+            cerr << "⚠️  Error: el archivo " << path << " no existe.\n";
+            pausar();
+        }
+    }
 
     auto songs = file.readPlaylist(path);
     if (songs.empty()) {
@@ -72,6 +85,7 @@ int main() {
                 getline(cin, path);
 
                 auto newSongs = file.readPlaylist(path);
+
                 if (newSongs.empty()) {
                     cerr << "No se encontraron canciones en la nueva playlist.\n";
                     pausar();
@@ -90,18 +104,117 @@ int main() {
                 cout << "✅ Playlist cambiada correctamente.\n";
                 break;
             }
+            case 6:{
+                int subopc = -1;
+                while (subopc != 0) {
+                    limpiar();
+                    playlist.print();
+                    cout << "\n";
+                    Ui::drawPlayListMenu();
+                    cout << "Seleccione una opción: ";
+                    cin >> subopc;
+                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+                    switch (subopc){
+                        case 1: { // Registrar
+                            Song newSong;
+                            cout << "Nombre: "; getline(cin, newSong.name);
+                            cout << "Artista: "; getline(cin, newSong.artist);
+                            cout << "Ruta del archivo (.ogg/.wav): "; getline(cin, newSong.path);
+                            playlist.newSong(newSong);
+                            break;
+                        }
+                        case 2: { // Buscar
+                            string q;
+                            cout << "Buscar canción (ID / Nombre / Artista): ";
+                            getline(cin, q);
+                            
+                            Node *found = playlist.FindSong(q); // asegúrate que FindSong devuelva Node*
+
+                            if (found) {
+                                current = found;
+                                player.play(current->song);
+                            } else {
+                                cout << "No se encontró la canción.\n";
+                            }
+                            break;
+                        }
+                        case 3: {
+                            int tipo;
+                            cout << "Ordenar por: 1) ID  2) Nombre  3) Artista: ";
+                            cin >> tipo;
+                            if (tipo == 1) playlist.sortbyid();
+                            else if (tipo == 2) playlist.sortbyName();
+                            else if (tipo == 3) playlist.sortbyArtist();
+                            int asc;
+                            cout << "1) Ascendente  2) Descendente: ";
+                            cin >> asc;
+                            if (asc == 2) playlist.invertList();
+                            cout << "✅ Lista ordenada.\n";
+                            break;
+                        }
+                        case 4:{
+                            playlist.invertList();
+                            cout << "🔁 Lista invertida.\n";
+                            break;
+                        }
+                        case 5: {
+                            int id;
+                            cout << "ID de la canción a editar: ";
+                            cin >> id;
+                            cin.ignore();
+
+                            Song newData;
+
+                            cout << "Nuevo nombre (enter para dejar igual): ";
+                            getline(cin, newData.name);
+                            cout << "Nuevo artista (enter para dejar igual): ";
+                            getline(cin, newData.artist);
+                            cout << "Nueva duración (enter para dejar igual): ";
+                            getline(cin, newData.duration);
+                            cout << "Nueva ruta (enter para dejar igual): ";
+                            getline(cin, newData.path);
+
+                            newData.id = id;
+
+                            Node* edited = playlist.editSong(id, "", newData);
+
+                            if (edited) {
+                                current = edited;
+                                player.play(current->song);
+                                cout << "🎧 Reproduciendo canción editada...\n";
+                            }
+                            break;
+                        }
+                        case 6: {
+                            int id;
+                            cout << "ID de la canción a eliminar: ";
+                            cin >> id;
+                            playlist.deleteSong(id, "");
+                            break;
+                        }
+                        case 7:{
+                            playlist.clear();
+                            cout << "🧹 Lista vaciada.\n";
+                            break;
+                        }
+                        case 0:
+                            cout << "Volviendo al menú principal...\n";
+                            break;
+                        default:
+                            cout << "⚠️ Opción no válida.\n";
+                    }
+                    cout << "\nPresione Enter para continuar...";
+                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                }
+                break;
+            }
             case 0:
                 player.stop();
                 cout << "👋  Gracias por usar el reproductor.\n";
                 break;
             default:
                 cout << "⚠️  Opción no válida.\n";
-        }
-
-        if (opc != 0) {
-            cout << "\nPresione Enter para continuar...";
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            cin.get(); // espera Enter
         }
     }
 
