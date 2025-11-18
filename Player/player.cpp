@@ -47,6 +47,14 @@ bool Player::isPlaying() {
     return music.getStatus() == sf::Music::Playing;
 }
 
+float Player::getPlayingOffset(){
+    return music.getPlayingOffset().asSeconds();
+}
+
+float Player::getDuration(){
+    return music.getDuration().asSeconds();
+}
+
 string Player::getCurrentSong() const {
     return currentSong.name;
 }
