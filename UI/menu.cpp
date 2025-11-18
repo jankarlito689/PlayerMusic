@@ -21,6 +21,35 @@ void drawFooter() {
     cout << CYAN << "╚════════════════════════════════════════════════════════════╝\n" << RESET;
 }
 
+void drawProgressBar(float current, float total) {
+    int barWidth = 40; // Tamaño de la barra
+    float progress = (total > 0 ? current / total : 0);
+
+    int pos = progress * barWidth;
+
+    cout << GREEN << "╔════════════════ PROGRESO ════════════════╗\n";
+    cout << "║ ";
+
+    for (int i = 0; i < barWidth; i++) {
+        if (i < pos) cout << BLUE << "█";
+        else cout << WHITE << "░";
+    }
+
+    cout << RESET << " ║\n";
+
+    // Mostrar tiempos
+    int currentInt = (int)current;
+    int totalInt   = (int)total;
+
+    cout << "║ " << YELLOW 
+         << currentInt / 60 << ":" << (currentInt % 60 < 10 ? "0" : "") << currentInt % 60 
+         << WHITE << "  /  " << GREEN
+         << totalInt / 60 << ":" << (totalInt % 60 < 10 ? "0" : "") << totalInt % 60
+         << RESET << "                                  ║\n";
+
+    cout << GREEN << "╚══════════════════════════════════════════╝\n" << RESET;
+}
+
 void drawMenu() {
     drawHeader();
     cout << WHITE
