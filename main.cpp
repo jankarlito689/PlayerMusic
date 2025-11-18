@@ -10,6 +10,8 @@
 using namespace std;
 namespace fs = std::filesystem;
 
+
+
 int main() {
     File file;
     CircularList playlist;
@@ -46,27 +48,27 @@ int main() {
     player.play(current->song);
 
     int opc = -1; 
-
+    
     while (opc != 0) {
-        limpiar();    
-        cout << "\n";
+        limpiar();
+        
         playlist.print();             
         cout << "\n";
-        Ui::drawMenu();
-        cout << "\n";
-        Ui::showPlayingInfo(current->song.name, current->song.artist, current->song.duration);
-        cout << "\n-------------------------------------\n";
-        cout << "Seleccione una opción: ";
-        cin >> opc;
 
+        //Obtenemos tiempo y duracion para la barra de progreso
+        float currentTime = player.getPlayingOffset();
+        float totalTime = player.getDuration();
+
+        Ui::drawMenu();
+        Ui::showPlayingInfo(current->song.name, current->song.artist, current->song.duration);
+        Ui::drawProgressBar(currentTime, totalTime);
+        cout << "\n-------------------------------------\n";
+        cout << "Presione una opción (0-6): ";
+        cin >> opc;
         cout << "\n-------------------------------------\n";
         switch (opc) {
-            case 1:
-                player.pause();
-                break;
-            case 2:
-                player.resume();
-                break;
+            case 1: player.pause(); break;
+            case 2: player.resume();break;
             case 3:
                 current = playlist.nextSong(current);
                 player.play(current->song);
@@ -214,7 +216,7 @@ int main() {
                 cout << "👋  Gracias por usar el reproductor.\n";
                 break;
             default:
-                cout << "⚠️  Opción no válida.\n";
+            cout << "  Opción no válida.\n";
         }
     }
 
