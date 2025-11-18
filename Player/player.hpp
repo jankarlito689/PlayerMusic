@@ -17,5 +17,7 @@ public:
     void pause();
     void resume();
     bool isPlaying();
+    float getPlayingOffset();
+    float getDuration();
     string getCurrentSong() const;
 };
