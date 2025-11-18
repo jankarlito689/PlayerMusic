@@ -43,7 +43,7 @@ debug: $(TARGET)
 release: CXXFLAGS += $(RELEASE_FLAGS)
 release: $(TARGET)
 
-LIBS = -lsfml-audio -lsfml-system
+LIBS = -lsfml-audio -lsfml-system -lncurses 
 $(TARGET): $(OBJECTS)
 	@echo "🔗 Enlazando $(TARGET)..."
 	$(CXX) $(OBJECTS) -o $@ $(LIBS)
