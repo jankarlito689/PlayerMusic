@@ -1,6 +1,10 @@
 #include <iostream>
 #include <limits>
 #include <filesystem>
+#include <unistd.h>
+#include <fcntl.h>
+#include <chrono>
+#include <thread>
 #include "File/File.hpp"
 #include "List/circularList.hpp"
 #include "Player/player.hpp"
@@ -10,7 +14,11 @@
 using namespace std;
 namespace fs = std::filesystem;
 
-
+// Esperar Enter sin borrar nada
+void waitEnter() {
+    cout << "\nPresione Enter para continuar...";
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+}
 
 int main() {
     File file;
@@ -24,12 +32,10 @@ int main() {
         cout << "Ingrese la ruta del archivo de playlist (.txt): ";
         getline(cin, path);
 
-        if (fs::exists(path)) {
-            break;
-        } else {
-            cerr << "⚠️  Error: el archivo " << path << " no existe.\n";
-            pausar();
-        }
+        if (fs::exists(path)) break;
+
+        cerr << "⚠️  Error: el archivo no existe.\n";
+        pausar();
     }
 
     auto songs = file.readPlaylist(path);
@@ -39,36 +45,69 @@ int main() {
         return 1;
     }
 
-    for (auto &song : songs)
-        playlist.insert_Last(song);
+    for (auto &song : songs) playlist.insert_Last(song);
     
     Node *current = playlist.getHead();
     if (!current) return 0;
 
     player.play(current->song);
 
-    int opc = -1; 
-    
+    int opc = -1;
+
+    bool freezeUI = false;   // Bloquea el refresco cuando hay input
+    bool inSubMenu = false;  // Bloquea refresco dentro de menú 6
+
+    // ----------------------------------
+    // Loop principal reactivo
+    // ----------------------------------
     while (opc != 0) {
-        limpiar();
-        
-        playlist.print();             
-        cout << "\n";
 
-        //Obtenemos tiempo y duracion para la barra de progreso
-        float currentTime = player.getPlayingOffset();
-        float totalTime = player.getDuration();
+        // SI la UI NO está congelada y no estamos en submenú -> refrescamos
+        if (!freezeUI && !inSubMenu) {
+            this_thread::sleep_for(chrono::milliseconds(50));
+            limpiar();
 
-        Ui::drawMenu();
-        Ui::showPlayingInfo(current->song.name, current->song.artist, current->song.duration);
-        Ui::drawProgressBar(currentTime, totalTime);
-        cout << "\n-------------------------------------\n";
-        cout << "Presione una opción (0-6): ";
-        cin >> opc;
-        cout << "\n-------------------------------------\n";
+            playlist.print();
+            cout << "\n";
+
+            float currentTime = player.getPlayingOffset();
+            float totalTime = player.getDuration();
+
+            Ui::drawMenu();
+            Ui::showPlayingInfo(current->song.name, current->song.artist, current->song.duration);
+            Ui::drawProgressBar(currentTime, totalTime);
+
+            cout << "\n-------------------------------------\n";
+            cout << "(Ingrese opción 0-6) → ";
+            cout.flush();
+        }
+        // ----------------------------------
+        // Entrada NO bloqueante (solo en menú principal)
+        // ----------------------------------
+        if (!inSubMenu) {
+            char key = getch_noblock();
+            if (key >= '0' && key <= '9') {
+                opc = key - '0';
+                freezeUI = true;  // congelamos repaint mientras procesamos
+                //cout << "\n-------------------------------------\n";
+                //cout << "(Ingrese opción 0-6) → " << opc << "\n\n";
+                cout.flush();
+                // pequeño margen para que el usuario vea la tecla (ajusta si quieres)
+                this_thread::sleep_for(chrono::milliseconds(500));
+            }
+        }
+        // Si no hay opción pendiente, continuamos
+        if (opc == -1) continue;
+        // ----------------------------------
+        // PROCESAR OPCIONES
+        // ----------------------------------
         switch (opc) {
-            case 1: player.pause(); break;
-            case 2: player.resume();break;
+            case 1:
+                player.pause();
+                break;
+            case 2:
+                player.resume();
+                break;
             case 3:
                 current = playlist.nextSong(current);
                 player.play(current->song);
@@ -78,147 +117,157 @@ int main() {
                 player.play(current->song);
                 break;
             case 5: {
+                // Detener repaints y usar entrada bloqueante para la ruta
+                freezeUI = true;
                 player.stop();
-                playlist.clear(); // 🧹 Limpia la lista actual (asegúrate de tener este método)
-                limpiar();
+                playlist.clear();
 
-                cout << "Ingrese la nueva ruta del archivo de playlist (.txt): ";
-                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                limpiar();
+                //cin.clear();
+                //cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+                cout << "Ingrese nueva ruta de playlist: ";
                 getline(cin, path);
 
                 auto newSongs = file.readPlaylist(path);
-
                 if (newSongs.empty()) {
-                    cerr << "No se encontraron canciones en la nueva playlist.\n";
-                    pausar();
+                    cerr << "No se encontraron canciones.\n";
+                    waitEnter();
                     break;
                 }
-
-                for (auto &song : newSongs)
-                    playlist.insert_Last(song);
-
+                for (auto &s : newSongs) playlist.insert_Last(s);
                 current = playlist.getHead();
-                if (!current) {
-                    cerr << "Error: playlist vacía.\n";
-                    break;
-                }
                 player.play(current->song);
-                cout << "✅ Playlist cambiada correctamente.\n";
                 break;
             }
-            case 6:{
+            case 6: {
+                // Entrar al submenú: detenemos completamente el loop reactivo
+                inSubMenu = true;
+                freezeUI = true;
+
+                // Limpieza segura del buffer antes de usar cin
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
                 int subopc = -1;
                 while (subopc != 0) {
                     limpiar();
                     playlist.print();
                     cout << "\n";
                     Ui::drawPlayListMenu();
-                    cout << "Seleccione una opción: ";
-                    cin >> subopc;
+                    cout << "Seleccione: ";
+                    cout.flush();
+
+                    // lectura bloqueante aquí (dentro del submenú)
+                    if (!(cin >> subopc)) {
+                        cin.clear();
+                        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                        cout << "Entrada inválida.\n";
+                        waitEnter();
+                        continue;
+                    }
+                    // limpiar newline pendiente antes de usar getline luego
                     cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
-                    switch (subopc){
-                        case 1: { // Registrar
+                    switch (subopc) {
+                        case 1: {
                             Song newSong;
                             cout << "Nombre: "; getline(cin, newSong.name);
                             cout << "Artista: "; getline(cin, newSong.artist);
-                            cout << "Ruta del archivo (.ogg/.wav): "; getline(cin, newSong.path);
+                            cout << "Ruta: "; getline(cin, newSong.path);
                             playlist.newSong(newSong);
                             break;
                         }
-                        case 2: { // Buscar
+                        case 2: {
                             string q;
-                            cout << "Buscar canción (ID / Nombre / Artista): ";
+                            cout << "Buscar: ";
                             getline(cin, q);
-                            
-                            Node *found = playlist.FindSong(q); // asegúrate que FindSong devuelva Node*
-
+                            Node *found = playlist.FindSong(q);
                             if (found) {
                                 current = found;
                                 player.play(current->song);
                             } else {
-                                cout << "No se encontró la canción.\n";
+                                cout << "No encontrado.\n";
                             }
                             break;
                         }
                         case 3: {
                             int tipo;
-                            cout << "Ordenar por: 1) ID  2) Nombre  3) Artista: ";
-                            cin >> tipo;
+                            cout << "Ordenar por (1-ID,2-Nombre,3-Artista): ";
+                            if (!(cin >> tipo)) { cin.clear(); cin.ignore(numeric_limits<streamsize>::max(), '\n'); break; }
+                            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
                             if (tipo == 1) playlist.sortbyid();
-                            else if (tipo == 2) playlist.sortbyName();
-                            else if (tipo == 3) playlist.sortbyArtist();
+                            if (tipo == 2) playlist.sortbyName();
+                            if (tipo == 3) playlist.sortbyArtist();
+
                             int asc;
-                            cout << "1) Ascendente  2) Descendente: ";
-                            cin >> asc;
+                            cout << "Ascendente(1) / Descendente(2): ";
+                            if (!(cin >> asc)) { cin.clear(); cin.ignore(numeric_limits<streamsize>::max(), '\n'); break; }
+                            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
                             if (asc == 2) playlist.invertList();
-                            cout << "✅ Lista ordenada.\n";
                             break;
                         }
-                        case 4:{
+                        case 4:
                             playlist.invertList();
-                            cout << "🔁 Lista invertida.\n";
                             break;
-                        }
                         case 5: {
                             int id;
-                            cout << "ID de la canción a editar: ";
-                            cin >> id;
-                            cin.ignore();
+                            cout << "ID: ";
+                            if (!(cin >> id)) { cin.clear(); cin.ignore(numeric_limits<streamsize>::max(), '\n'); break; }
+                            cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
                             Song newData;
-
-                            cout << "Nuevo nombre (enter para dejar igual): ";
-                            getline(cin, newData.name);
-                            cout << "Nuevo artista (enter para dejar igual): ";
-                            getline(cin, newData.artist);
-                            cout << "Nueva duración (enter para dejar igual): ";
-                            getline(cin, newData.duration);
-                            cout << "Nueva ruta (enter para dejar igual): ";
-                            getline(cin, newData.path);
-
+                            cout << "Nuevo nombre: "; getline(cin, newData.name);
+                            cout << "Nuevo artista: "; getline(cin, newData.artist);
+                            cout << "Nueva duración: "; getline(cin, newData.duration);
+                            cout << "Nueva ruta: "; getline(cin, newData.path);
                             newData.id = id;
 
-                            Node* edited = playlist.editSong(id, "", newData);
-
+                            Node *edited = playlist.editSong(id, "", newData);
                             if (edited) {
                                 current = edited;
                                 player.play(current->song);
-                                cout << "🎧 Reproduciendo canción editada...\n";
                             }
                             break;
                         }
                         case 6: {
                             int id;
-                            cout << "ID de la canción a eliminar: ";
-                            cin >> id;
+                            cout << "ID: ";
+                            if (!(cin >> id)) { cin.clear(); cin.ignore(numeric_limits<streamsize>::max(), '\n'); break; }
+                            cin.ignore(numeric_limits<streamsize>::max(), '\n');
                             playlist.deleteSong(id, "");
                             break;
                         }
-                        case 7:{
+                        case 7:
                             playlist.clear();
-                            cout << "🧹 Lista vaciada.\n";
                             break;
-                        }
                         case 0:
-                            cout << "Volviendo al menú principal...\n";
                             break;
                         default:
-                            cout << "⚠️ Opción no válida.\n";
-                    }
-                    cout << "\nPresione Enter para continuar...";
-                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                }
+                            cout << "Opción inválida.\n";
+                            break;
+                    } // switch subopc
+                    waitEnter();
+                } // while subopc
+                // restablecer flags
+                inSubMenu = false;
+                freezeUI = false;
+                opc = -1;
                 break;
-            }
+            } // case 6
             case 0:
                 player.stop();
-                cout << "👋  Gracias por usar el reproductor.\n";
-                break;
+                cout << "👋 Gracias por usar el reproductor.\n";
+                return 0;
             default:
-            cout << "  Opción no válida.\n";
+                cout << "Opción inválida.\n";
+                break;
         }
+        // reactivar repaint y resetear opcion
+        freezeUI = false;
+        opc = -1;
     }
-
     return 0;
 }
