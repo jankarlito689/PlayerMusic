@@ -78,7 +78,7 @@ int main() {
             Ui::drawProgressBar(currentTime, totalTime);
 
             cout << "\n-------------------------------------\n";
-            cout << "(Ingrese opción 0-6) → ";
+            cout << "(Ingrese opción 0-6)";
             cout.flush();
         }
         // ----------------------------------
@@ -89,8 +89,7 @@ int main() {
             if (key >= '0' && key <= '9') {
                 opc = key - '0';
                 freezeUI = true;  // congelamos repaint mientras procesamos
-                //cout << "\n-------------------------------------\n";
-                //cout << "(Ingrese opción 0-6) → " << opc << "\n\n";
+                cout << "\n-------------------------------------\n";
                 cout.flush();
                 // pequeño margen para que el usuario vea la tecla (ajusta si quieres)
                 this_thread::sleep_for(chrono::milliseconds(500));
@@ -125,7 +124,6 @@ int main() {
                 limpiar();
                 //cin.clear();
                 //cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
                 cout << "Ingrese nueva ruta de playlist: ";
                 getline(cin, path);
 
@@ -264,6 +262,10 @@ int main() {
             default:
                 cout << "Opción inválida.\n";
                 break;
+        }
+        if(!inSubMenu){
+            cout << "\nPresione Enter para continuar...";
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
         }
         // reactivar repaint y resetear opcion
         freezeUI = false;
