@@ -18,17 +18,33 @@ void limpiar() {
     cout << "\033[2J\033[H";
 }
 char getch_noblock(){
-    // No bloquear lectura
-    int oldf = fcntl(STDIN_FILENO, F_GETFL);
-    fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
+    // Guardamos flags y termios originales
+    int fd = STDIN_FILENO;
+    termios oldt{};
+    if (tcgetattr(fd, &oldt) == -1) return 0;
+
+    termios newt = oldt;
+    // Modo no canónico (ICANON off) y sin eco (ECHO off)
+    newt.c_lflag &= ~(ICANON | ECHO);
+    newt.c_cc[VMIN] = 0;  // lectura inmediata
+    newt.c_cc[VTIME] = 0;
+
+    if (tcsetattr(fd, TCSANOW, &newt) == -1) return 0;
+
+    // Poner descriptor en non-blocking
+    int oldf = fcntl(fd, F_GETFL, 0);
+    fcntl(fd, F_SETFL, oldf | O_NONBLOCK);
 
     char c = 0;
-    if (read(STDIN_FILENO, &c, 1) < 0) {
-        return 0;
+    ssize_t r = read(fd, &c, 1);
+    if (r <= 0) {
+        c = 0; // no input
     }
 
-    // Restaurar flag
-    fcntl(STDIN_FILENO, F_SETFL, oldf);
+    // Restaurar flags y termios
+    fcntl(fd, F_SETFL, oldf);
+    tcsetattr(fd, TCSANOW, &oldt);
+
     return c;
 }
 // Lectura segura de enteros
