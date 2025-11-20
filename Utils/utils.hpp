@@ -9,5 +9,7 @@ using namespace std;
 void pausar();
 void limpiar();
 int leerEntero(const string& mensaje);
-
+void gotoxy(int x, int y);
+void saveCursor();
+void restoreCursor();
 char getch_noblock();

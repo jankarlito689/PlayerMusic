@@ -62,3 +62,13 @@ int leerEntero(const string& mensaje) {
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
     }
 }
+//Mover la ui en la pantalla
+void gotoxy(int x, int y){
+    cout << "\033[" << y << ";" << x << "H";
+}
+void restoreCursor(){
+    printf("\033[u");
+}
+void saveCursor(){
+    printf("\033[s");
+}
