@@ -67,7 +67,8 @@ int main() {
             this_thread::sleep_for(chrono::milliseconds(50));
             limpiar();
 
-            playlist.print();
+            //playlist.print();
+            Ui::drawPlaylist(playlist, current);
             cout << "\n";
 
             float currentTime = player.getPlayingOffset();
@@ -150,7 +151,8 @@ int main() {
                 int subopc = -1;
                 while (subopc != 0) {
                     limpiar();
-                    playlist.print();
+                    //playlist.print();
+                    Ui::drawPlaylist(playlist, current);
                     cout << "\n";
                     Ui::drawPlayListMenu();
                     cout << "Seleccione: ";
