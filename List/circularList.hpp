@@ -37,5 +37,5 @@ public:
     int getNextId(){ return autoId++;};
     Node* nextSong(Node* current);
     Node* prevSong(Node* current);
-    Node* getHead();
+    Node* getHead() const;
 };

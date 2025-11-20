@@ -257,7 +257,7 @@ void CircularList::deleteSong(const int &id, const string &name){
 
     cout << "⚠️ No se encontró la canción a eliminar.\n";
 }
-Node* CircularList::getHead() { return ptrHead; }
+Node* CircularList::getHead() const { return ptrHead; }
 
 Node* CircularList::nextSong(Node* current) {
     return current ? current->next : nullptr;
